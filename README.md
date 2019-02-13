@@ -10,6 +10,14 @@ World.
 
 You might want to use [Weblate docker-compose](https://github.com/WeblateOrg/docker-compose) to run Weblate.
 
+## sr258's fork
+
+This fork is makes the Weblate Docker container compatible with H5P and GitHub
+
+* It changes the JSON formatter to output correctly nested JSON (for simplicity's sake if you just select JSON)
+* It allows you to add the GitHub OAuth token as an environment variable (WEBLATE_GITHUB_OAUTH_TOKEN)
+* It fixes issues with access rights to ~/.config/hub (changes location to /home/weblate/.config/hub and automatically creates the file with the token from WEBLATE_GITHUB_OAUTH_TOKEN)
+
 ## Exposed ports
 
 In July 2019 (starting with the 3.7.1-6 tag), the containers is not running as

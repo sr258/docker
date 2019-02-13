@@ -44,6 +44,19 @@ if [ ! -d $WEBLATE_PY_PATH ] ; then
     touch $WEBLATE_PY_PATH/models.py
 fi
 
+# Add GitHub Hub configuration file
+if [ ! -d /home/weblate/.config ] ; then
+    mkdir /home/weblate/.config
+    chown weblate:weblate /home/weblate/.config
+fi
+if [ ! -f /home/weblate/.config/hub ] ; then
+  echo "github.com:
+- user: $WEBLATE_GITHUB_USERNAME
+  oauth_token: $WEBLATE_GITHUB_OAUTH_TOKEN
+  protocol: https" > /home/weblate/.config/hub
+  chown weblate:weblate /home/weblate/.config/hub
+fi
+
 run_weblate() {
     $WEBLATE_CMD "$@"
 }
