@@ -1,0 +1,24 @@
+From 2d62b74e04bfbea822da45bbb5c0afa1ff594d0a Mon Sep 17 00:00:00 2001
+From: Sebastian Rettig <serettig@posteo.de>
+Date: Wed, 13 Feb 2019 18:33:03 +0100
+Subject: [PATCH] set /home/weblate/.config/hub as patch for GitHub config file
+
+---
+ weblate/vcs/git.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/weblate/vcs/git.py b/weblate/vcs/git.py
+index 6226f50ed5..f622c57d80 100644
+--- a/weblate/vcs/git.py
++++ b/weblate/vcs/git.py
+@@ -521,7 +521,7 @@ class GithubRepository(GitRepository):
+         """Generate environment for process execution."""
+         env = super(cls, GithubRepository)._getenv()
+         # Add path to config if it exists
+-        userconfig = os.path.expanduser('~/.config/hub')
++        userconfig = '/home/weblate/.config/hub'
+         if os.path.exists(userconfig):
+             env['HUB_CONFIG'] = userconfig
+ 
+-- 
+2.19.1
