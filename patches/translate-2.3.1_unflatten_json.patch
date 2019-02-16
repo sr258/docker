@@ -1,7 +1,7 @@
 From 93381ebda5e7fd074149c00816884ef752da6989 Mon Sep 17 00:00:00 2001
 From: Sebastian Rettig <serettig@posteo.de>
 Date: Fri, 8 Feb 2019 20:55:41 +0100
-Subject: [PATCH] backported changes
+Subject: [PATCH 1/2] backported changes
 
 ---
  translate/storage/jsonl10n.py |  13 +--
@@ -249,6 +249,37 @@ index 00000000..06d3a991
 +    return ''.join(bits)
 +    
 \ No newline at end of file
+-- 
+2.19.1
+
+
+From 4db4d3832b87741453e9c8fbe1af78b3c2a15e65 Mon Sep 17 00:00:00 2001
+From: Sebastian Rettig <serettig@posteo.de>
+Date: Sat, 16 Feb 2019 16:54:41 +0100
+Subject: [PATCH 2/2] corrected treatment of omission of several list entries
+
+---
+ translate/tools/unflatten.py | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/translate/tools/unflatten.py b/translate/tools/unflatten.py
+index 06d3a991..18a612ad 100644
+--- a/translate/tools/unflatten.py
++++ b/translate/tools/unflatten.py
+@@ -163,8 +163,11 @@ class _list_holder(_holder):
+             if key != n:
+                 assert key > n
+                 missing_key = "%s[%d]" % (self.flat_key, n)
+-                #raise ValueError("missing key %r" % missing_key)
+-                value.append(OrderedDict())
++                # BEGIN PATCH by S. Rettig
++                # raise ValueError("missing key %r" % missing_key)
++                for x in range(key - len(value)):
++                  value.append(OrderedDict())
++                # END PATCH
+             value.append(val)
+         return value
+ 
 -- 
 2.19.1
 
