@@ -322,6 +322,13 @@ SOCIAL_AUTH_PIPELINE = (
     'weblate.accounts.pipeline.notify_connect',
     'weblate.accounts.pipeline.password_reset',
 )
+
+# Optional: Legal
+if os.environ.get('WEBLATE_ENABLE_LEGAL', '0') == '1':
+  SOCIAL_AUTH_PIPELINE += (
+     'weblate.legal.pipeline.tos_confirm',
+  )
+
 SOCIAL_AUTH_DISCONNECT_PIPELINE = (
     'social_core.pipeline.disconnect.allowed_to_disconnect',
     'social_core.pipeline.disconnect.get_entries',
@@ -405,6 +412,12 @@ MIDDLEWARE = [
     'weblate.middleware.SecurityMiddleware',
 ]
 
+# Optional: Legal
+if os.environ.get('WEBLATE_ENABLE_LEGAL', '0') == '1':
+  MIDDLEWARE.append(
+     'weblate.legal.middleware.RequireTOSMiddleware',
+  )
+
 # Rollbar integration
 if 'ROLLBAR_KEY' in os.environ:
     MIDDLEWARE.append(
@@ -459,6 +472,12 @@ INSTALLED_APPS = [
     # Optional: Git exporter
     'weblate.gitexport',
 ]
+
+# Optional: Legal
+if os.environ.get('WEBLATE_ENABLE_LEGAL', '0') == '1':
+  INSTALLED_APPS += (
+    'weblate.legal',
+  )
 
 # Sentry integration
 if 'SENTRY_DSN' in os.environ:
