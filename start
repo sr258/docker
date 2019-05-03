@@ -59,13 +59,13 @@ fi
 
 # Copy legal documents
 if [ -f "/app/documents/tos.html" ] ; then
-  cp /app/documents/tos.html /usr/local/lib/python3.6/dist-packages/weblate/legal/templates/legal/documents/tos.html
+  cp /app/documents/tos.html /usr/local/lib/python3.7/dist-packages/weblate/legal/templates/legal/documents/tos.html
 fi
 if [ -f "/app/documents/summary.html" ] ; then
-  cp /app/documents/summary.html /usr/local/lib/python3.6/dist-packages/weblate/legal/templates/legal/documents/summary.html
+  cp /app/documents/summary.html /usr/local/lib/python3.7/dist-packages/weblate/legal/templates/legal/documents/summary.html
 fi
 if [ -f "/app/documents/privacy.html" ] ; then
-  cp /app/documents/privacy.html /usr/local/lib/python3.6/dist-packages/weblate/legal/templates/legal/documents/privacy.html
+  cp /app/documents/privacy.html /usr/local/lib/python3.7/dist-packages/weblate/legal/templates/legal/documents/privacy.html
 fi
 
 run_weblate() {
