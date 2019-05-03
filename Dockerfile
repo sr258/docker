@@ -1,6 +1,6 @@
-FROM ubuntu:bionic
+FROM debian:buster-slim
 MAINTAINER Michal Čihař <michal@cihar.com>
-ENV VERSION 3.4
+ENV VERSION 3.6.1
 LABEL version=$VERSION
 
 # Add user early to get a consistent userid
@@ -9,10 +9,11 @@ RUN useradd --shell /bin/sh --user-group weblate \
   && touch /home/weblate/.ssh/authorized_keys \
   && chown -R weblate:weblate /home/weblate \
   && chmod 700 /home/weblate/.ssh \
-  && install -d -o weblate -g weblate -m 755 /usr/local/lib/python3.6/dist-packages/data-test \
+  && install -d -o weblate -g weblate -m 755 /usr/local/lib/python3.7/dist-packages/data-test \
   && install -d -o weblate -g weblate -m 755 /app/data
 
-# Configure utf-8 locales
+# Configure utf-8 locales to make sure Python
+# correctly handles unicode filenames
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
 COPY requirements.txt patches /usr/src/weblate/
@@ -37,17 +38,17 @@ RUN set -x \
     python3-pillow \
     python3-setuptools \
     python3-wheel \
+    python3-gdbm \
     python3-psycopg2 \
     python3-rcssmin \
     python3-rjsmin \
-    python3-redis \
-    python3-hiredis \
     gettext \
     postgresql-client \
     mercurial \
     git \
     git-svn \
     subversion \
+    pkg-config \
     python3-dev \
     libxml2-dev \
     libxmlsec1-dev \
@@ -62,10 +63,12 @@ RUN set -x \
     tesseract-ocr \ 
     patch \
   && pip3 install Weblate==$VERSION -r /usr/src/weblate/requirements.txt \
+  && python3 -c 'from phply.phpparse import make_parser; make_parser()' \
   && ln -s /usr/local/share/weblate/examples/ /app/ \
   && rm -rf /root/.cache /tmp/* \
   && apt-get -y purge \
     python3-dev \
+    pkg-config \
     libleptonica-dev \
     libtesseract-dev \
     libxml2-dev \
@@ -87,11 +90,11 @@ RUN curl -L https://github.com/github/hub/releases/download/v2.2.9/hub-linux-amd
 # Configuration for Weblate, nginx, uwsgi and supervisor
 COPY etc /etc/
 RUN chmod a+r /etc/weblate/settings.py && \
-  ln -s /etc/weblate/settings.py /usr/local/lib/python3.6/dist-packages/weblate/settings.py
+  ln -s /etc/weblate/settings.py /usr/local/lib/python3.7/dist-packages/weblate/settings.py
 
 # Apply hotfixes
 RUN find /usr/src/weblate -name '*.patch' -print0 | \
-    xargs -n1 -0 -r patch -p1 -d /usr/local/lib/python3.6/dist-packages/ -i
+    xargs -n1 -0 -r patch -p1 -d /usr/local/lib/python3.7/dist-packages/ -i
 
 # Entrypoint
 COPY start /app/bin/

@@ -1,11 +1,23 @@
 #!/bin/sh
 set -e
 
+# Provide sane default value
+if [ -z "$POSTGRES_SSL_MODE" ] ; then
+    export POSTGRES_SSL_MODE="prefer"
+fi
+
+# Export variables for psql use
 export PGPASSWORD="$POSTGRES_PASSWORD"
+export PGSSLMODE="$POSTGRES_SSL_MODE"
+
+# Export Redis CLI varibables
+if [ -n "$REDIS_PASSWORD" ] ; then
+    export REDISCLI_AUTH="$REDIS_PASSWORD"
+fi
 
 export WEBLATE_CMD="/usr/local/bin/weblate"
 
-chown weblate:weblate /app/data
+chown -R weblate:weblate /app/data
 
 # Add GitHub Hub configuration file
 if [ ! -z "${WEBLATE_GITHUB_OAUTH_TOKEN}" ] ; then

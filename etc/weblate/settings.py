@@ -24,31 +24,13 @@ import os
 from logging.handlers import SysLogHandler
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
-
-
-def get_env_list(name, default=None):
-    """Helper to get list from environment."""
-    if name not in os.environ:
-        return default or []
-    return os.environ[name].split(',')
-
-
-def get_env_map(name, default=None):
-    """
-    Helper to get mapping from environment.
-
-    parses 'full_name:name,email:mail'
-    into {'email': 'mail', 'full_name': 'name'}
-    """
-    if os.environ.get(name):
-        return dict(e.split(':') for e in os.environ[name].split(','))
-    return default or {}
+from weblate.utils.environment import get_env_list, get_env_map, get_env_bool
 
 #
 # Django settings for Weblate project.
 #
 
-DEBUG = os.environ.get('WEBLATE_DEBUG', '1') == '1'
+DEBUG = get_env_bool('WEBLATE_DEBUG', True)
 
 ADMINS = (
     (os.environ['WEBLATE_ADMIN_NAME'], os.environ['WEBLATE_ADMIN_EMAIL']),
@@ -74,6 +56,10 @@ DATABASES = {
         'HOST': os.environ['POSTGRES_HOST'],
         # Set to empty string for default. Not used with sqlite3.
         'PORT': os.environ['POSTGRES_PORT'],
+        # Customizations for databases
+        'OPTIONS': {
+            'sslmode': os.environ.get('POSTGRES_SSL_MODE', 'prefer'),
+        },
     }
 }
 
@@ -116,6 +102,7 @@ LANGUAGES = (
     ('id', 'Indonesia'),
     ('it', 'Italiano'),
     ('ja', '日本語'),
+    ('kk', 'Қазақ тілі'),
     ('ko', '한국어'),
     ('ksh', 'Kölsch'),
     ('nb', 'Norsk bokmål'),
@@ -148,7 +135,7 @@ USE_L10N = True
 USE_TZ = True
 
 # URL prefix to use, please see documentation for more details
-URL_PREFIX = ''
+URL_PREFIX = os.environ.get('WEBLATE_URL_PREFIX', '')
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
@@ -252,6 +239,8 @@ if 'WEBLATE_SOCIAL_AUTH_FACEBOOK_KEY' in os.environ:
 SOCIAL_AUTH_FACEBOOK_KEY = os.environ.get('WEBLATE_SOCIAL_AUTH_FACEBOOK_KEY', '')
 SOCIAL_AUTH_FACEBOOK_SECRET = os.environ.get('WEBLATE_SOCIAL_AUTH_FACEBOOK_SECRET', '')
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'public_profile']
+SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {'fields': 'id,name,email'}
+SOCIAL_AUTH_FACEBOOK_API_VERSION = '3.1'
 
 if 'WEBLATE_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY' in os.environ:
     AUTHENTICATION_BACKENDS += ('social_core.backends.google.GoogleOAuth2',)
@@ -355,7 +344,7 @@ SOCIAL_AUTH_LOGIN_ERROR_URL = \
 SOCIAL_AUTH_EMAIL_FORM_URL = \
     '{0}/accounts/email/'.format(URL_PREFIX)
 SOCIAL_AUTH_NEW_ASSOCIATION_REDIRECT_URL = \
-    '{0}/accounts/profile/#auth'.format(URL_PREFIX)
+    '{0}/accounts/profile/#account'.format(URL_PREFIX)
 SOCIAL_AUTH_PROTECTED_USER_FIELDS = ('email',)
 SOCIAL_AUTH_SLUGIFY_USERNAMES = True
 SOCIAL_AUTH_SLUGIFY_FUNCTION = 'weblate.accounts.pipeline.slugify_username'
@@ -394,7 +383,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Allow new user registrations
-REGISTRATION_OPEN = os.environ.get('WEBLATE_REGISTRATION_OPEN', '1') == '1'
+REGISTRATION_OPEN = get_env_bool('WEBLATE_REGISTRATION_OPEN', True)
 
 # Middleware
 MIDDLEWARE = [
@@ -428,7 +417,7 @@ if 'ROLLBAR_KEY' in os.environ:
         'access_token': os.environ['ROLLBAR_KEY'],
         'environment': os.environ.get('ROLLBAR_ENVIRONMENT', 'production'),
         'branch': 'master',
-        'root': '/usr/local/lib/python3.6/dist-packages/weblate/',
+        'root': '/usr/local/lib/python3.7/dist-packages/weblate/',
         'exception_level_filters': [
              (PermissionDenied, 'ignored'),
              (Http404, 'ignored'),
@@ -594,6 +583,11 @@ LOGGING = {
             'handlers': [DEFAULT_LOG],
             'level': os.environ.get('WEBLATE_LOGLEVEL', 'DEBUG'),
         },
+        # Logging search operations
+        'weblate.search': {
+            'handlers': [DEFAULT_LOG],
+            'level': 'INFO',
+        },
         # Logging VCS operations
         'weblate.vcs': {
             'handlers': [DEFAULT_LOG],
@@ -697,7 +691,7 @@ MT_SAP_USE_MT = True
 SITE_TITLE = os.environ.get('WEBLATE_SITE_TITLE', 'Weblate')
 
 # Whether site uses https
-ENABLE_HTTPS = os.environ.get('WEBLATE_ENABLE_HTTPS', '0') == '1'
+ENABLE_HTTPS = get_env_bool('WEBLATE_ENABLE_HTTPS', False)
 
 # Use HTTPS when creating redirect URLs for social authentication, see
 # documentation for more details:
@@ -755,8 +749,13 @@ ENABLE_HOOKS = True
 # Number of nearby messages to show in each direction
 NEARBY_MESSAGES = 5
 
+# By default the length of a given translation is limited to the length of
+# the source string * 10 characters. Set this option to False to allow longer
+# translations (up to 10.000 characters)
+LIMIT_TRANSLATION_LENGTH_BY_SOURCE_LENGTH = True
+
 # Use simple language codes for default language/country combinations
-SIMPLIFY_LANGUAGES = os.environ.get('WEBLATE_SIMPLIFY_LANGUAGES', '1') == '1'
+SIMPLIFY_LANGUAGES = get_env_bool('WEBLATE_SIMPLIFY_LANGUAGES', True)
 
 # Render forms using bootstrap
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
@@ -775,12 +774,13 @@ CRISPY_TEMPLATE_PACK = 'bootstrap3'
 #     'weblate.checks.chars.EndEllipsisCheck',
 #     'weblate.checks.chars.EndSemicolonCheck',
 #     'weblate.checks.chars.MaxLengthCheck',
+#     'weblate.checks.chars.KashidaCheck',
 #     'weblate.checks.format.PythonFormatCheck',
 #     'weblate.checks.format.PythonBraceFormatCheck',
 #     'weblate.checks.format.PHPFormatCheck',
 #     'weblate.checks.format.CFormatCheck',
 #     'weblate.checks.format.PerlFormatCheck',
-#     'weblate.checks.format.JavascriptFormatCheck',
+#     'weblate.checks.format.JavaScriptFormatCheck',
 #     'weblate.checks.format.CSharpFormatCheck',
 #     'weblate.checks.format.JavaFormatCheck',
 #     'weblate.checks.format.JavaMessageFormatCheck',
@@ -794,6 +794,10 @@ CRISPY_TEMPLATE_PACK = 'bootstrap3'
 #     'weblate.checks.chars.ZeroWidthSpaceCheck',
 #     'weblate.checks.markup.XMLValidityCheck',
 #     'weblate.checks.markup.XMLTagsCheck',
+#     'weblate.checks.markup.MarkdownRefLinkCheck',
+#     'weblate.checks.markup.MarkdownLinkCheck',
+#     'weblate.checks.markup.MarkdownSyntaxCheck',
+#     'weblate.checks.markup.URLCheck',
 #     'weblate.checks.source.OptionalPluralCheck',
 #     'weblate.checks.source.EllipsisCheck',
 #     'weblate.checks.source.MultipleFailingCheck',
@@ -848,6 +852,9 @@ CACHES = {
     }
 }
 
+# Extract redis password
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', None)
+
 if 'MEMCACHED_HOST' in os.environ:
     CACHES['default'] = {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
@@ -868,6 +875,7 @@ else:
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
             'PARSER_CLASS': 'redis.connection.HiredisParser',
+            'PASSWORD': REDIS_PASSWORD if REDIS_PASSWORD else None,
         },
         'KEY_PREFIX': 'weblate',
     }
@@ -902,7 +910,7 @@ REST_FRAMEWORK = {
     'UNAUTHENTICATED_USER': 'weblate.auth.models.get_anonymous',
 }
 
-if os.environ.get('WEBLATE_REQUIRE_LOGIN', '0') == '1':
+if get_env_bool('WEBLATE_REQUIRE_LOGIN', False):
     # Example for restricting access to logged in users
     LOGIN_REQUIRED_URLS = (
         r'/(.*)$',
@@ -930,8 +938,8 @@ if os.environ.get('WEBLATE_REQUIRE_LOGIN', '0') == '1':
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 # Email server
-EMAIL_USE_TLS = os.environ.get('WEBLATE_EMAIL_USE_TLS', '1') == '1'
-EMAIL_USE_SSL = os.environ.get('WEBLATE_EMAIL_USE_SSL', '0') == '1'
+EMAIL_USE_TLS = get_env_bool('WEBLATE_EMAIL_USE_TLS', True)
+EMAIL_USE_SSL = get_env_bool('WEBLATE_EMAIL_USE_SSL', False)
 EMAIL_HOST = os.environ.get('WEBLATE_EMAIL_HOST', 'localhost')
 EMAIL_HOST_USER = os.environ.get(
     'WEBLATE_EMAIL_HOST_USER',
@@ -947,6 +955,14 @@ GOOGLE_ANALYTICS_ID = os.environ.get('WEBLATE_GOOGLE_ANALYTICS_ID', '')
 
 AKISMET_API_KEY = os.environ.get('WEBLATE_AKISMET_API_KEY', None)
 
+# Silence some of the Django system checks
+SILENCED_SYSTEM_CHECKS = [
+    # We have modified django.contrib.auth.middleware.AuthenticationMiddleware
+    # as weblate.accounts.middleware.AuthenticationMiddleware
+    'admin.E408',
+]
+SILENCED_SYSTEM_CHECKS.extend(get_env_list('WEBLATE_SILENCED_SYSTEM_CHECKS'))
+
 # Celery worker configuration for testing
 if 'MEMCACHED_HOST' in os.environ:
     CELERY_TASK_ALWAYS_EAGER = True
@@ -954,7 +970,8 @@ if 'MEMCACHED_HOST' in os.environ:
 # Celery worker configuration for production
 else:
     CELERY_TASK_ALWAYS_EAGER = False
-    CELERY_BROKER_URL = 'redis://{0}:{1}/{2}'.format(
+    CELERY_BROKER_URL = 'redis://{0}{1}:{2}/{3}'.format(
+        ':{}'.format(REDIS_PASSWORD) if REDIS_PASSWORD else '',
         os.environ.get('REDIS_HOST', 'cache'),
         os.environ.get('REDIS_PORT', '6379'),
         os.environ.get('REDIS_DB', '1'),
@@ -963,6 +980,7 @@ else:
 
 # Celery settings, it is not recommended to change these
 CELERY_WORKER_PREFETCH_MULTIPLIER = 0
+CELERY_WORKER_MAX_MEMORY_PER_CHILD = 200000
 CELERY_BEAT_SCHEDULE_FILENAME = os.path.join(
     DATA_DIR, 'celery', 'beat-schedule'
 )
@@ -972,6 +990,9 @@ CELERY_TASK_ROUTES = {
     'weblate.trans.tasks.cleanup_fulltext': {'queue': 'search'},
     'weblate.memory.tasks.*': {'queue': 'memory'},
 }
+
+# Enable auto updating
+AUTO_UPDATE = get_env_bool('WEBLATE_AUTO_UPDATE', False)
 
 ADDITIONAL_CONFIG = '/app/data/settings-override.py'
 if os.path.exists(ADDITIONAL_CONFIG):
