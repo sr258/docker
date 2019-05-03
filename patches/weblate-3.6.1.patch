@@ -1,0 +1,366 @@
+From 2d62b74e04bfbea822da45bbb5c0afa1ff594d0a Mon Sep 17 00:00:00 2001
+From: Sebastian Rettig <serettig@posteo.de>
+Date: Wed, 13 Feb 2019 18:33:03 +0100
+Subject: [PATCH 01/13] set /home/weblate/.config/hub as patch for GitHub
+ config file
+
+---
+ weblate/vcs/git.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/weblate/vcs/git.py b/weblate/vcs/git.py
+index 6226f50ed5..f622c57d80 100644
+--- a/weblate/vcs/git.py
++++ b/weblate/vcs/git.py
+@@ -521,7 +521,7 @@ class GithubRepository(GitRepository):
+         """Generate environment for process execution."""
+         env = super(cls, GithubRepository)._getenv()
+         # Add path to config if it exists
+-        userconfig = os.path.expanduser('~/.config/hub')
++        userconfig = '/home/weblate/.config/hub'
+         if os.path.exists(userconfig):
+             env['HUB_CONFIG'] = userconfig
+ 
+-- 
+2.20.1
+
+
+From 538d74209b03f2c839fa9fbc24998ed728ab4699 Mon Sep 17 00:00:00 2001
+From: Sebastian Rettig <serettig@posteo.de>
+Date: Fri, 22 Feb 2019 15:27:35 +0100
+Subject: [PATCH 02/13] Strip leading and trailing . from language code
+ (backport of 951c5c1028885e264af3806969dbaca1de3d153c)
+
+---
+ weblate/lang/models.py | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/weblate/lang/models.py b/weblate/lang/models.py
+index 285c507e9b..8cca051c89 100644
+--- a/weblate/lang/models.py
++++ b/weblate/lang/models.py
+@@ -139,6 +139,9 @@ class LanguageQuerySet(models.QuerySet):
+ 
+         # Remove some unwanted chars
+         code = code.replace(' ', '').replace('(', '').replace(')', '')
++        
++        # Strip leading and trailing .
++        code = code.strip('.')
+ 
+         return code
+ 
+-- 
+2.20.1
+
+
+From 3440a14d0a32f209eb343cf4f4cd72a18af8c337 Mon Sep 17 00:00:00 2001
+From: Sebastian Rettig <serettig@posteo.de>
+Date: Fri, 22 Feb 2019 15:29:21 +0100
+Subject: [PATCH 03/13] formatting
+
+---
+ weblate/lang/models.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/weblate/lang/models.py b/weblate/lang/models.py
+index 8cca051c89..492bfe6ffe 100644
+--- a/weblate/lang/models.py
++++ b/weblate/lang/models.py
+@@ -139,7 +139,7 @@ class LanguageQuerySet(models.QuerySet):
+ 
+         # Remove some unwanted chars
+         code = code.replace(' ', '').replace('(', '').replace(')', '')
+-        
++
+         # Strip leading and trailing .
+         code = code.strip('.')
+ 
+-- 
+2.20.1
+
+
+From d54c33aac4098c14407bfab8b06f590deab4ea78 Mon Sep 17 00:00:00 2001
+From: Sebastian Rettig <serettig@posteo.de>
+Date: Sat, 23 Feb 2019 17:20:05 +0100
+Subject: [PATCH 04/13] aligned German legal requirements
+
+---
+ weblate/templates/footer.html | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/weblate/templates/footer.html b/weblate/templates/footer.html
+index a17196fd0d..2e870bd6e5 100644
+--- a/weblate/templates/footer.html
++++ b/weblate/templates/footer.html
+@@ -4,7 +4,12 @@
+  <ul>
+   <li>{% blocktrans %}Powered by {{ weblate_version_link }}{% endblocktrans %}</li>
+   <li><a href="{% url 'about' %}">{% blocktrans %}About Weblate{% endblocktrans %}</a></li>
+-  {% if has_legal %}<li><a href="{% url 'legal:index' %}">{% trans "Legal" %}</a></li>{% endif %}
++  {% if has_legal %}  
++  <li><a href="{$ url 'legal:index' %}">Impressum</a></li>
++  <li><a href="{% url 'legal:tos' %}">Nutzungsbedingungen</a></li>
++  <li><a href="{% url 'legal:cookies' %}">Cookies</a></li>
++  <li><a href="{$ url 'legal:privacy' %}">Datenschutz</a></li>
++  {% endif %}
+   {% if status_url %}<li><a href="{{ status_url }}">{% trans "Service status" %}</a></li>{% endif %}
+   <li><a href="{% url 'contact' %}">{% trans "Contact" %}</a></li>
+   <li><a href="{% documentation 'user/index' %}">{% trans "Documentation" %}</a></li>
+-- 
+2.20.1
+
+
+From 8508edd2a3d03bd994faa512718caa870640b63e Mon Sep 17 00:00:00 2001
+From: Sebastian Rettig <serettig@posteo.de>
+Date: Sat, 23 Feb 2019 17:28:27 +0100
+Subject: [PATCH 05/13] fixed footer
+
+---
+ weblate/templates/footer.html | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/weblate/templates/footer.html b/weblate/templates/footer.html
+index 2e870bd6e5..9db5ea35df 100644
+--- a/weblate/templates/footer.html
++++ b/weblate/templates/footer.html
+@@ -6,7 +6,7 @@
+   <li><a href="{% url 'about' %}">{% blocktrans %}About Weblate{% endblocktrans %}</a></li>
+   {% if has_legal %}  
+   <li><a href="{$ url 'legal:index' %}">Impressum</a></li>
+-  <li><a href="{% url 'legal:tos' %}">Nutzungsbedingungen</a></li>
++  <li><a href="{% url 'legal:terms' %}">Nutzungsbedingungen</a></li>
+   <li><a href="{% url 'legal:cookies' %}">Cookies</a></li>
+   <li><a href="{$ url 'legal:privacy' %}">Datenschutz</a></li>
+   {% endif %}
+-- 
+2.20.1
+
+
+From 25bf48173ca89b544b68ef59bd0846058566e90d Mon Sep 17 00:00:00 2001
+From: Sebastian Rettig <serettig@posteo.de>
+Date: Sun, 24 Feb 2019 10:32:48 +0100
+Subject: [PATCH 06/13] fixed url
+
+---
+ weblate/templates/footer.html | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/weblate/templates/footer.html b/weblate/templates/footer.html
+index 9db5ea35df..e5398b1def 100644
+--- a/weblate/templates/footer.html
++++ b/weblate/templates/footer.html
+@@ -4,11 +4,11 @@
+  <ul>
+   <li>{% blocktrans %}Powered by {{ weblate_version_link }}{% endblocktrans %}</li>
+   <li><a href="{% url 'about' %}">{% blocktrans %}About Weblate{% endblocktrans %}</a></li>
+-  {% if has_legal %}  
+-  <li><a href="{$ url 'legal:index' %}">Impressum</a></li>
++  {% if has_legal %}    
++  <li><a href="{% url 'legal:index' %}">Impressum</a></li>
+   <li><a href="{% url 'legal:terms' %}">Nutzungsbedingungen</a></li>
+   <li><a href="{% url 'legal:cookies' %}">Cookies</a></li>
+-  <li><a href="{$ url 'legal:privacy' %}">Datenschutz</a></li>
++  <li><a href="{% url 'legal:privacy' %}">Datenschutz</a></li>
+   {% endif %}
+   {% if status_url %}<li><a href="{{ status_url }}">{% trans "Service status" %}</a></li>{% endif %}
+   <li><a href="{% url 'contact' %}">{% trans "Contact" %}</a></li>
+-- 
+2.20.1
+
+
+From 72161a7935e8984c0874146ca4c4539cb2f1d9b1 Mon Sep 17 00:00:00 2001
+From: Sebastian Rettig <serettig@posteo.de>
+Date: Wed, 13 Feb 2019 18:33:03 +0100
+Subject: [PATCH 07/13] set /home/weblate/.config/hub as patch for GitHub
+ config file
+
+---
+ weblate/vcs/git.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/weblate/vcs/git.py b/weblate/vcs/git.py
+index 796f55666c..f1504884a3 100644
+--- a/weblate/vcs/git.py
++++ b/weblate/vcs/git.py
+@@ -526,7 +526,7 @@ class GithubRepository(GitRepository):
+         """Generate environment for process execution."""
+         env = super(cls, GithubRepository)._getenv()
+         # Add path to config if it exists
+-        userconfig = os.path.expanduser('~/.config/hub')
++        userconfig = '/home/weblate/.config/hub'
+         if os.path.exists(userconfig):
+             env['HUB_CONFIG'] = userconfig
+ 
+-- 
+2.20.1
+
+
+From b95bcc2b59c3ba83963f3af8978cb3ea33d73c85 Mon Sep 17 00:00:00 2001
+From: Sebastian Rettig <serettig@posteo.de>
+Date: Fri, 22 Feb 2019 15:27:35 +0100
+Subject: [PATCH 08/13] Strip leading and trailing . from language code
+ (backport of 951c5c1028885e264af3806969dbaca1de3d153c)
+
+---
+ weblate/lang/models.py | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/weblate/lang/models.py b/weblate/lang/models.py
+index d4fd7de793..345095d609 100644
+--- a/weblate/lang/models.py
++++ b/weblate/lang/models.py
+@@ -140,6 +140,9 @@ class LanguageQuerySet(models.QuerySet):
+ 
+         # Remove some unwanted chars
+         code = code.replace(' ', '').replace('(', '').replace(')', '')
++        
++        # Strip leading and trailing .
++        code = code.strip('.')
+ 
+         # Strip leading and trailing .
+         code = code.strip('.')
+-- 
+2.20.1
+
+
+From 2843f0b2f0f417fdce989ab05a04e25621f5ba37 Mon Sep 17 00:00:00 2001
+From: Sebastian Rettig <serettig@posteo.de>
+Date: Fri, 22 Feb 2019 15:29:21 +0100
+Subject: [PATCH 09/13] formatting
+
+---
+ weblate/lang/models.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/weblate/lang/models.py b/weblate/lang/models.py
+index 345095d609..381ea96584 100644
+--- a/weblate/lang/models.py
++++ b/weblate/lang/models.py
+@@ -140,7 +140,7 @@ class LanguageQuerySet(models.QuerySet):
+ 
+         # Remove some unwanted chars
+         code = code.replace(' ', '').replace('(', '').replace(')', '')
+-        
++
+         # Strip leading and trailing .
+         code = code.strip('.')
+ 
+-- 
+2.20.1
+
+
+From 2885a71338c3af8beced776e1dbbcd9b05f2bdac Mon Sep 17 00:00:00 2001
+From: Sebastian Rettig <serettig@posteo.de>
+Date: Sat, 23 Feb 2019 17:20:05 +0100
+Subject: [PATCH 10/13] aligned German legal requirements
+
+---
+ weblate/templates/footer.html | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/weblate/templates/footer.html b/weblate/templates/footer.html
+index 483e1bbf0d..eabd954fcc 100644
+--- a/weblate/templates/footer.html
++++ b/weblate/templates/footer.html
+@@ -4,7 +4,12 @@
+  <ul>
+   <li>{% blocktrans %}Powered by {{ weblate_version_link }}{% endblocktrans %}</li>
+   <li><a href="{% url 'about' %}">{% blocktrans %}About Weblate{% endblocktrans %}</a></li>
+-  {% if has_legal %}<li><a href="{% url 'legal:index' %}">{% trans "Legal" %}</a></li>{% endif %}
++  {% if has_legal %}  
++  <li><a href="{$ url 'legal:index' %}">Impressum</a></li>
++  <li><a href="{% url 'legal:tos' %}">Nutzungsbedingungen</a></li>
++  <li><a href="{% url 'legal:cookies' %}">Cookies</a></li>
++  <li><a href="{$ url 'legal:privacy' %}">Datenschutz</a></li>
++  {% endif %}
+   {% if status_url %}<li><a href="{{ status_url }}">{% trans "Service status" %}</a></li>{% endif %}
+   <li><a href="{% url 'contact' %}">{% trans "Contact" %}</a></li>
+   <li><a href="{% documentation 'index' %}">{% trans "Documentation" %}</a></li>
+-- 
+2.20.1
+
+
+From 9d7d568eb9e795dc16d93bce60c1b2b8879428c4 Mon Sep 17 00:00:00 2001
+From: Sebastian Rettig <serettig@posteo.de>
+Date: Sat, 23 Feb 2019 17:28:27 +0100
+Subject: [PATCH 11/13] fixed footer
+
+---
+ weblate/templates/footer.html | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/weblate/templates/footer.html b/weblate/templates/footer.html
+index eabd954fcc..aa01c56b89 100644
+--- a/weblate/templates/footer.html
++++ b/weblate/templates/footer.html
+@@ -6,7 +6,7 @@
+   <li><a href="{% url 'about' %}">{% blocktrans %}About Weblate{% endblocktrans %}</a></li>
+   {% if has_legal %}  
+   <li><a href="{$ url 'legal:index' %}">Impressum</a></li>
+-  <li><a href="{% url 'legal:tos' %}">Nutzungsbedingungen</a></li>
++  <li><a href="{% url 'legal:terms' %}">Nutzungsbedingungen</a></li>
+   <li><a href="{% url 'legal:cookies' %}">Cookies</a></li>
+   <li><a href="{$ url 'legal:privacy' %}">Datenschutz</a></li>
+   {% endif %}
+-- 
+2.20.1
+
+
+From a1f778a643480d18d051c4d40456702f1b2c33b7 Mon Sep 17 00:00:00 2001
+From: Sebastian Rettig <serettig@posteo.de>
+Date: Sun, 24 Feb 2019 10:32:48 +0100
+Subject: [PATCH 12/13] fixed url
+
+---
+ weblate/templates/footer.html | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/weblate/templates/footer.html b/weblate/templates/footer.html
+index aa01c56b89..b0e48bdfe9 100644
+--- a/weblate/templates/footer.html
++++ b/weblate/templates/footer.html
+@@ -4,11 +4,11 @@
+  <ul>
+   <li>{% blocktrans %}Powered by {{ weblate_version_link }}{% endblocktrans %}</li>
+   <li><a href="{% url 'about' %}">{% blocktrans %}About Weblate{% endblocktrans %}</a></li>
+-  {% if has_legal %}  
+-  <li><a href="{$ url 'legal:index' %}">Impressum</a></li>
++  {% if has_legal %}    
++  <li><a href="{% url 'legal:index' %}">Impressum</a></li>
+   <li><a href="{% url 'legal:terms' %}">Nutzungsbedingungen</a></li>
+   <li><a href="{% url 'legal:cookies' %}">Cookies</a></li>
+-  <li><a href="{$ url 'legal:privacy' %}">Datenschutz</a></li>
++  <li><a href="{% url 'legal:privacy' %}">Datenschutz</a></li>
+   {% endif %}
+   {% if status_url %}<li><a href="{{ status_url }}">{% trans "Service status" %}</a></li>{% endif %}
+   <li><a href="{% url 'contact' %}">{% trans "Contact" %}</a></li>
+-- 
+2.20.1
+
+
+From 4a8caab2d22a9daf6556719203577c9cc00e8267 Mon Sep 17 00:00:00 2001
+From: Sebastian Rettig <serettig@posteo.de>
+Date: Fri, 3 May 2019 15:05:49 +0200
+Subject: [PATCH 13/13] removed backport
+
+---
+ weblate/lang/models.py | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/weblate/lang/models.py b/weblate/lang/models.py
+index 381ea96584..d4fd7de793 100644
+--- a/weblate/lang/models.py
++++ b/weblate/lang/models.py
+@@ -144,9 +144,6 @@ class LanguageQuerySet(models.QuerySet):
+         # Strip leading and trailing .
+         code = code.strip('.')
+ 
+-        # Strip leading and trailing .
+-        code = code.strip('.')
+-
+         return code
+ 
+     def aliases_get(self, code):
+-- 
+2.20.1
+
