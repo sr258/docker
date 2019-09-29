@@ -1,16 +1,16 @@
-From 93381ebda5e7fd074149c00816884ef752da6989 Mon Sep 17 00:00:00 2001
+From d6ca0d31b0628c5b8e6363270fd9e5b8caf1fb70 Mon Sep 17 00:00:00 2001
 From: Sebastian Rettig <serettig@posteo.de>
 Date: Fri, 8 Feb 2019 20:55:41 +0100
 Subject: [PATCH 1/2] backported changes
 
 ---
- translate/storage/jsonl10n.py |  13 +--
+ translate/storage/jsonl10n.py |  18 +--
  translate/tools/unflatten.py  | 200 ++++++++++++++++++++++++++++++++++
- 2 files changed, 204 insertions(+), 9 deletions(-)
+ 2 files changed, 204 insertions(+), 14 deletions(-)
  create mode 100644 translate/tools/unflatten.py
 
 diff --git a/translate/storage/jsonl10n.py b/translate/storage/jsonl10n.py
-index 1f6360e1..2da918a4 100644
+index fe7446d6..e000a52f 100644
 --- a/translate/storage/jsonl10n.py
 +++ b/translate/storage/jsonl10n.py
 @@ -76,7 +76,7 @@ import six
@@ -22,14 +22,19 @@ index 1f6360e1..2da918a4 100644
  
  class JsonUnit(base.TranslationUnit):
      """A JSON entry"""
-@@ -158,16 +158,11 @@ class JsonFile(base.TranslationStore):
+@@ -159,21 +159,11 @@ class JsonFile(base.TranslationStore):
              self.parse(inputfile)
  
      def serialize(self, out):
 -        def merge(d1, d2):
 -            for k in d2:
--                if k in d1 and isinstance(d1[k], dict) and isinstance(d2[k], dict):
--                    merge(d1[k], d2[k])
+-                if k in d1:
+-                    if isinstance(d1[k], dict) and isinstance(d2[k], dict):
+-                        merge(d1[k], d2[k])
+-                    elif isinstance(d1[k], list) and isinstance(d2[k], list):
+-                        d1[k].extend(d2[k])
+-                    else:
+-                        d1[k] = d2[k]
 -                else:
 -                    d1[k] = d2[k]
          units = OrderedDict()
@@ -41,7 +46,7 @@ index 1f6360e1..2da918a4 100644
 +        out.write(json.dumps(complexUnflattened, **self.dump_args).encode(self.encoding))
          out.write(b'\n')
  
-     def _extract_translatables(self, data, stop=None, prev="", name_node=None,
+     def _extract_units(self, data, stop=None, prev="", name_node=None, name_last_node=None, last_node=None):
 diff --git a/translate/tools/unflatten.py b/translate/tools/unflatten.py
 new file mode 100644
 index 00000000..06d3a991
@@ -250,10 +255,10 @@ index 00000000..06d3a991
 +    
 \ No newline at end of file
 -- 
-2.19.1
+2.20.1
 
 
-From 4db4d3832b87741453e9c8fbe1af78b3c2a15e65 Mon Sep 17 00:00:00 2001
+From ec347fd4941198769ac2bcdcf271429c2aea415f Mon Sep 17 00:00:00 2001
 From: Sebastian Rettig <serettig@posteo.de>
 Date: Sat, 16 Feb 2019 16:54:41 +0100
 Subject: [PATCH 2/2] corrected treatment of omission of several list entries
@@ -281,5 +286,4 @@ index 06d3a991..18a612ad 100644
          return value
  
 -- 
-2.19.1
-
+2.20.1
