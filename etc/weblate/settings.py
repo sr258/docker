@@ -24,7 +24,7 @@ import os
 from logging.handlers import SysLogHandler
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
-from weblate.utils.environment import get_env_list, get_env_map, get_env_bool
+from weblate.utils.environment import get_env_list, get_env_map, get_env_bool, modify_env_list
 
 #
 # Django settings for Weblate project.
@@ -90,12 +90,11 @@ LANGUAGES = (
     ('da', 'Dansk'),
     ('de', 'Deutsch'),
     ('en', 'English'),
-    ('en-gb', 'English (United Kingdom)'),
     ('el', 'Ελληνικά'),
+    ('en-gb', 'English (United Kingdom)'),
     ('es', 'Español'),
     ('fi', 'Suomi'),
     ('fr', 'Français'),
-    ('fy', 'Frysk'),
     ('gl', 'Galego'),
     ('he', 'עברית'),
     ('hu', 'Magyar'),
@@ -104,7 +103,6 @@ LANGUAGES = (
     ('ja', '日本語'),
     ('kk', 'Қазақ тілі'),
     ('ko', '한국어'),
-    ('ksh', 'Kölsch'),
     ('nb', 'Norsk bokmål'),
     ('nl', 'Nederlands'),
     ('pl', 'Polski'),
@@ -256,7 +254,19 @@ if 'WEBLATE_SOCIAL_AUTH_GITLAB_API_URL' in os.environ:
 
 SOCIAL_AUTH_GITLAB_KEY = os.environ.get('WEBLATE_SOCIAL_AUTH_GITLAB_KEY', '')
 SOCIAL_AUTH_GITLAB_SECRET = os.environ.get('WEBLATE_SOCIAL_AUTH_GITLAB_SECRET', '')
-SOCIAL_AUTH_GITLAB_SCOPE = ['api']
+SOCIAL_AUTH_GITLAB_SCOPE = ['read_user']
+
+if 'WEBLATE_SOCIAL_AUTH_AUTH0_KEY' in os.environ:
+    SOCIAL_AUTH_AUTH0_KEY = os.environ.get('WEBLATE_SOCIAL_AUTH_AUTH0_KEY', '')
+    SOCIAL_AUTH_AUTH0_SECRET = os.environ.get('WEBLATE_SOCIAL_AUTH_AUTH0_SECRET', '')
+    SOCIAL_AUTH_AUTH0_DOMAIN = os.environ.get('WEBLATE_SOCIAL_AUTH_AUTH0_DOMAIN', '')
+    SOCIAL_AUTH_AUTH0_TITLE = os.environ.get('WEBLATE_SOCIAL_AUTH_AUTH0_TITLE', '')
+    SOCIAL_AUTH_AUTH0_IMAGE = os.environ.get('WEBLATE_SOCIAL_AUTH_AUTH0_IMAGE', '')
+    AUTHENTICATION_BACKENDS += ('social_core.backends.auth0.Auth0OAuth2',)
+    SOCIAL_AUTH_AUTH0_SCOPE = ['openid', 'profile', 'email']
+
+if 'WEBLATE_SOCIAL_AUTH_AUTH0_AUTH_EXTRA_ARGUMENTS' in os.environ:
+    SOCIAL_AUTH_AUTH0_AUTH_EXTRA_ARGUMENTS = get_env_map('WEBLATE_SOCIAL_AUTH_AUTH0_AUTH_EXTRA_ARGUMENTS')
 
 # Azure
 if 'WEBLATE_SOCIAL_AUTH_AZUREAD_OAUTH2_KEY' in os.environ:
@@ -273,11 +283,30 @@ SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_KEY = os.environ.get('WEBLATE_SOCIAL_AUTH_AZUR
 SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = os.environ.get('WEBLATE_SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET', '')
 SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID = os.environ.get('WEBLATE_SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID', '')
 
+# Keycloak
+if 'WEBLATE_SOCIAL_AUTH_KEYCLOAK_KEY' in os.environ:
+    AUTHENTICATION_BACKENDS += ('social_core.backends.keycloak.KeycloakOAuth2',)
+    SOCIAL_AUTH_KEYCLOAK_KEY = os.environ.get('WEBLATE_SOCIAL_AUTH_KEYCLOAK_KEY', '')
+    SOCIAL_AUTH_KEYCLOAK_SECRET = os.environ.get('WEBLATE_SOCIAL_AUTH_KEYCLOAK_SECRET', '')
+    SOCIAL_AUTH_KEYCLOAK_PUBLIC_KEY = os.environ.get('WEBLATE_SOCIAL_AUTH_KEYCLOAK_PUBLIC_KEY', '')
+    SOCIAL_AUTH_KEYCLOAK_AUTHORIZATION_URL = os.environ.get('WEBLATE_SOCIAL_AUTH_KEYCLOAK_AUTHORIZATION_URL', '')
+    SOCIAL_AUTH_KEYCLOAK_ACCESS_TOKEN_URL = os.environ.get('WEBLATE_SOCIAL_AUTH_KEYCLOAK_ACCESS_TOKEN_URL', '')
+    SOCIAL_AUTH_KEYCLOAK_ID_KEY = 'email'
+
+# Linux distros
+if 'WEBLATE_SOCIAL_AUTH_FEDORA' in os.environ:
+    AUTHENTICATION_BACKENDS += ('social_core.backends.fedora.FedoraOpenId')
+if 'WEBLATE_SOCIAL_AUTH_OPENSUSE' in os.environ:
+    AUTHENTICATION_BACKENDS += ('social_core.backends.suse.OpenSUSEOpenId')
+    SOCIAL_AUTH_OPENSUSE_FORCE_EMAIL_VALIDATION = True
+if 'WEBLATE_SOCIAL_AUTH_UBUNTU' in os.environ:
+    AUTHENTICATION_BACKENDS += ('social_core.backends.ubuntu.UbuntuOpenId')
+
 # https://docs.weblate.org/en/latest/admin/auth.html#ldap-authentication
 if 'WEBLATE_AUTH_LDAP_SERVER_URI' in os.environ:
     AUTH_LDAP_SERVER_URI = os.environ.get('WEBLATE_AUTH_LDAP_SERVER_URI')
     AUTH_LDAP_USER_DN_TEMPLATE = os.environ.get('WEBLATE_AUTH_LDAP_USER_DN_TEMPLATE', 'cn=%(user)s,o=Example')
-    AUTHENTICATION_BACKENDS = ('django_auth_ldap.backend.LDAPBackend', 'weblate.accounts.auth.WeblateUserBackend')
+    AUTHENTICATION_BACKENDS += ('django_auth_ldap.backend.LDAPBackend',)
     AUTH_LDAP_USER_ATTR_MAP = get_env_map('WEBLATE_AUTH_LDAP_USER_ATTR_MAP', {'full_name': 'name', 'email': 'mail'})
     AUTH_LDAP_BIND_DN = os.environ.get('WEBLATE_AUTH_LDAP_BIND_DN', '')
     AUTH_LDAP_BIND_PASSWORD = os.environ.get('WEBLATE_AUTH_LDAP_BIND_PASSWORD', '')
@@ -352,7 +381,7 @@ SOCIAL_AUTH_SLUGIFY_FUNCTION = 'weblate.accounts.pipeline.slugify_username'
 # Password validation configuration
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',  # noqa: E501, pylint: disable=line-too-long
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
@@ -384,6 +413,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Allow new user registrations
 REGISTRATION_OPEN = get_env_bool('WEBLATE_REGISTRATION_OPEN', True)
+
+# Email registration filter
+REGISTRATION_EMAIL_MATCH = os.environ.get('WEBLATE_REGISTRATION_EMAIL_MATCH', '.*')
 
 # Middleware
 MIDDLEWARE = [
@@ -428,6 +460,9 @@ ROOT_URLCONF = 'weblate.urls'
 
 # Django and Weblate apps
 INSTALLED_APPS = [
+    # Docker customization app, listed first to allow overriding static files
+    'customize',
+
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -437,6 +472,7 @@ INSTALLED_APPS = [
     'django.contrib.admin.apps.SimpleAdminConfig',
     'django.contrib.admindocs',
     'django.contrib.sitemaps',
+    'django.contrib.humanize',
     'social_django',
     'crispy_forms',
     'compressor',
@@ -452,6 +488,7 @@ INSTALLED_APPS = [
     'weblate.langdata',
     'weblate.memory',
     'weblate.screenshots',
+    'weblate.fonts',
     'weblate.accounts',
     'weblate.utils',
     'weblate.vcs',
@@ -479,6 +516,8 @@ if 'SENTRY_DSN' in os.environ:
         'list_max_length': 100,
     }
     INSTALLED_APPS.append('raven.contrib.django.raven_compat')
+
+modify_env_list(INSTALLED_APPS, 'APPS')
 
 # Path to locales
 LOCALE_PATHS = (os.path.join(BASE_DIR, 'weblate', 'locale'), )
@@ -601,6 +640,11 @@ LOGGING = {
     }
 }
 
+# Logging of management commands to console
+if (os.environ.get('DJANGO_IS_MANAGEMENT_COMMAND', False)
+        and 'console' not in LOGGING['loggers']['weblate']['handlers']):
+    LOGGING['loggers']['weblate']['handlers'].append('console')
+
 # Remove syslog setup if it's not present
 if not HAVE_SYSLOG:
     del LOGGING['handlers']['syslog']
@@ -654,7 +698,7 @@ if 'WEBLATE_MT_MYMEMORY_ENABLED' in os.environ:
     MT_SERVICES += ('weblate.machinery.mymemory.MyMemoryTranslation',)
 
 if 'WEBLATE_MT_GLOSBE_ENABLED' in os.environ:
-    MT_SERVICES += ('weblateweblate.trans.glosbe.GlosbeTranslation',)
+    MT_SERVICES += ('weblate.machinery.glosbe.GlosbeTranslation',)
 
 # Google API key for Google Translate API
 MT_GOOGLE_KEY = os.environ.get('WEBLATE_MT_GOOGLE_KEY', None)
@@ -702,11 +746,17 @@ SOCIAL_AUTH_REDIRECT_IS_HTTPS = ENABLE_HTTPS
 # https://docs.djangoproject.com/en/1.11/ref/settings/#csrf-cookie-httponly
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = ENABLE_HTTPS
-# Store CSRF token in session (since Django 1.11)
+# Store CSRF token in session
 CSRF_USE_SESSIONS = True
+# Customize CSRF failure view
+CSRF_FAILURE_VIEW = 'weblate.trans.views.error.csrf_failure'
 SESSION_COOKIE_SECURE = ENABLE_HTTPS
 # SSL redirect
 SECURE_SSL_REDIRECT = ENABLE_HTTPS
+# SSL redirect URL exemption list
+SECURE_REDIRECT_EXEMPT = (
+    r'healthz/$',           # Allowing HTTP access to health check
+)
 # Session cookie age (in seconds)
 SESSION_COOKIE_AGE = 1209600
 
@@ -761,74 +811,84 @@ SIMPLIFY_LANGUAGES = get_env_bool('WEBLATE_SIMPLIFY_LANGUAGES', True)
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
 
 # List of quality checks
-# CHECK_LIST = (
-#     'weblate.checks.same.SameCheck',
-#     'weblate.checks.chars.BeginNewlineCheck',
-#     'weblate.checks.chars.EndNewlineCheck',
-#     'weblate.checks.chars.BeginSpaceCheck',
-#     'weblate.checks.chars.EndSpaceCheck',
-#     'weblate.checks.chars.EndStopCheck',
-#     'weblate.checks.chars.EndColonCheck',
-#     'weblate.checks.chars.EndQuestionCheck',
-#     'weblate.checks.chars.EndExclamationCheck',
-#     'weblate.checks.chars.EndEllipsisCheck',
-#     'weblate.checks.chars.EndSemicolonCheck',
-#     'weblate.checks.chars.MaxLengthCheck',
-#     'weblate.checks.chars.KashidaCheck',
-#     'weblate.checks.format.PythonFormatCheck',
-#     'weblate.checks.format.PythonBraceFormatCheck',
-#     'weblate.checks.format.PHPFormatCheck',
-#     'weblate.checks.format.CFormatCheck',
-#     'weblate.checks.format.PerlFormatCheck',
-#     'weblate.checks.format.JavaScriptFormatCheck',
-#     'weblate.checks.format.CSharpFormatCheck',
-#     'weblate.checks.format.JavaFormatCheck',
-#     'weblate.checks.format.JavaMessageFormatCheck',
-#     'weblate.checks.angularjs.AngularJSInterpolationCheck',
-#     'weblate.checks.consistency.PluralsCheck',
-#     'weblate.checks.consistency.SamePluralsCheck',
-#     'weblate.checks.consistency.ConsistencyCheck',
-#     'weblate.checks.consistency.TranslatedCheck',
-#     'weblate.checks.chars.NewlineCountingCheck',
-#     'weblate.checks.markup.BBCodeCheck',
-#     'weblate.checks.chars.ZeroWidthSpaceCheck',
-#     'weblate.checks.markup.XMLValidityCheck',
-#     'weblate.checks.markup.XMLTagsCheck',
-#     'weblate.checks.markup.MarkdownRefLinkCheck',
-#     'weblate.checks.markup.MarkdownLinkCheck',
-#     'weblate.checks.markup.MarkdownSyntaxCheck',
-#     'weblate.checks.markup.URLCheck',
-#     'weblate.checks.source.OptionalPluralCheck',
-#     'weblate.checks.source.EllipsisCheck',
-#     'weblate.checks.source.MultipleFailingCheck',
-# )
+CHECK_LIST = [
+    'weblate.checks.same.SameCheck',
+    'weblate.checks.chars.BeginNewlineCheck',
+    'weblate.checks.chars.EndNewlineCheck',
+    'weblate.checks.chars.BeginSpaceCheck',
+    'weblate.checks.chars.EndSpaceCheck',
+    'weblate.checks.chars.EndStopCheck',
+    'weblate.checks.chars.EndColonCheck',
+    'weblate.checks.chars.EndQuestionCheck',
+    'weblate.checks.chars.EndExclamationCheck',
+    'weblate.checks.chars.EndEllipsisCheck',
+    'weblate.checks.chars.EndSemicolonCheck',
+    'weblate.checks.chars.MaxLengthCheck',
+    'weblate.checks.chars.KashidaCheck',
+    'weblate.checks.format.PythonFormatCheck',
+    'weblate.checks.format.PythonBraceFormatCheck',
+    'weblate.checks.format.PHPFormatCheck',
+    'weblate.checks.format.CFormatCheck',
+    'weblate.checks.format.PerlFormatCheck',
+    'weblate.checks.format.JavaScriptFormatCheck',
+    'weblate.checks.format.CSharpFormatCheck',
+    'weblate.checks.format.JavaFormatCheck',
+    'weblate.checks.format.JavaMessageFormatCheck',
+    'weblate.checks.angularjs.AngularJSInterpolationCheck',
+    'weblate.checks.qt.QtFormatCheck',
+    'weblate.checks.qt.QtPluralCheck',
+    'weblate.checks.ruby.RubyFormatCheck',
+    'weblate.checks.consistency.PluralsCheck',
+    'weblate.checks.consistency.SamePluralsCheck',
+    'weblate.checks.consistency.ConsistencyCheck',
+    'weblate.checks.consistency.TranslatedCheck',
+    'weblate.checks.chars.NewlineCountingCheck',
+    'weblate.checks.markup.BBCodeCheck',
+    'weblate.checks.chars.ZeroWidthSpaceCheck',
+    'weblate.checks.render.MaxSizeCheck',
+    'weblate.checks.markup.XMLValidityCheck',
+    'weblate.checks.markup.XMLTagsCheck',
+    'weblate.checks.markup.MarkdownRefLinkCheck',
+    'weblate.checks.markup.MarkdownLinkCheck',
+    'weblate.checks.markup.MarkdownSyntaxCheck',
+    'weblate.checks.markup.URLCheck',
+    'weblate.checks.source.OptionalPluralCheck',
+    'weblate.checks.source.EllipsisCheck',
+    'weblate.checks.source.MultipleFailingCheck',
+]
+modify_env_list(CHECK_LIST, 'CHECK')
 
 # List of automatic fixups
-# AUTOFIX_LIST = (
-#     'weblate.trans.autofixes.whitespace.SameBookendingWhitespace',
-#     'weblate.trans.autofixes.chars.ReplaceTrailingDotsWithEllipsis',
-#     'weblate.trans.autofixes.chars.RemoveZeroSpace',
-#     'weblate.trans.autofixes.chars.RemoveControlChars',
-# )
+AUTOFIX_LIST = [
+    'weblate.trans.autofixes.whitespace.SameBookendingWhitespace',
+    'weblate.trans.autofixes.chars.ReplaceTrailingDotsWithEllipsis',
+    'weblate.trans.autofixes.chars.RemoveZeroSpace',
+    'weblate.trans.autofixes.chars.RemoveControlChars',
+]
+modify_env_list(CHECK_LIST, 'AUTOFIX')
 
 # List of enabled addons
-# WEBLATE_ADDONS = (
-#     'weblate.addons.gettext.GenerateMoAddon',
-#     'weblate.addons.gettext.UpdateLinguasAddon',
-#     'weblate.addons.gettext.UpdateConfigureAddon',
-#     'weblate.addons.gettext.MsgmergeAddon',
-#     'weblate.addons.gettext.GettextCustomizeAddon',
-#     'weblate.addons.gettext.GettextAuthorComments',
-#     'weblate.addons.cleanup.CleanupAddon',
-#     'weblate.addons.consistency.LangaugeConsistencyAddon',
-#     'weblate.addons.discovery.DiscoveryAddon',
-#     'weblate.addons.flags.SourceEditAddon',
-#     'weblate.addons.flags.TargetEditAddon',
-#     'weblate.addons.generate.GenerateFileAddon',
-#     'weblate.addons.json.JSONCustomizeAddon',
-#     'weblate.addons.properties.PropertiesSortAddon',
-#     'weblate.addons.git.GitSquashAddon',
-# )
+WEBLATE_ADDONS = [
+    'weblate.addons.gettext.GenerateMoAddon',
+    'weblate.addons.gettext.UpdateLinguasAddon',
+    'weblate.addons.gettext.UpdateConfigureAddon',
+    'weblate.addons.gettext.MsgmergeAddon',
+    'weblate.addons.gettext.GettextCustomizeAddon',
+    'weblate.addons.gettext.GettextAuthorComments',
+    'weblate.addons.cleanup.CleanupAddon',
+    'weblate.addons.consistency.LangaugeConsistencyAddon',
+    'weblate.addons.discovery.DiscoveryAddon',
+    'weblate.addons.flags.SourceEditAddon',
+    'weblate.addons.flags.TargetEditAddon',
+    'weblate.addons.flags.SameEditAddon',
+    'weblate.addons.generate.GenerateFileAddon',
+    'weblate.addons.json.JSONCustomizeAddon',
+    'weblate.addons.properties.PropertiesSortAddon',
+    'weblate.addons.git.GitSquashAddon',
+    'weblate.addons.removal.RemoveComments',
+    'weblate.addons.removal.RemoveSuggestions',
+]
+modify_env_list(CHECK_LIST, 'ADDONS')
 
 # E-mail address that error messages come from.
 SERVER_EMAIL = os.environ['WEBLATE_SERVER_EMAIL']
@@ -854,31 +914,26 @@ CACHES = {
 
 # Extract redis password
 REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', None)
+REDIS_PROTO = 'rediss' if get_env_bool('REDIS_TLS', False) else 'redis'
 
-if 'MEMCACHED_HOST' in os.environ:
-    CACHES['default'] = {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '{0}:{1}'.format(
-            os.environ.get('MEMCACHED_HOST', 'cache'),
-            os.environ.get('MEMCACHED_PORT', '11211'),
-        ),
-        'KEY_PREFIX': 'weblate',
-    }
-else:
-    CACHES['default'] = {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://{0}:{1}/{2}'.format(
-            os.environ.get('REDIS_HOST', 'cache'),
-            os.environ.get('REDIS_PORT', '6379'),
-            os.environ.get('REDIS_DB', '1'),
-        ),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'PARSER_CLASS': 'redis.connection.HiredisParser',
-            'PASSWORD': REDIS_PASSWORD if REDIS_PASSWORD else None,
-        },
-        'KEY_PREFIX': 'weblate',
-    }
+CACHES['default'] = {
+    'BACKEND': 'django_redis.cache.RedisCache',
+    'LOCATION': '{}://{}:{}/{}'.format(
+        REDIS_PROTO,
+        os.environ.get('REDIS_HOST', 'cache'),
+        os.environ.get('REDIS_PORT', '6379'),
+        os.environ.get('REDIS_DB', '1'),
+    ),
+    'OPTIONS': {
+        'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        'PARSER_CLASS': 'redis.connection.HiredisParser',
+        'PASSWORD': REDIS_PASSWORD if REDIS_PASSWORD else None,
+        'CONNECTION_POOL_KWARGS': {},
+    },
+    'KEY_PREFIX': 'weblate',
+}
+if not get_env_bool('REDIS_VERIFY_SSL', True):
+    caches['default']['OPTIONS']['CONNECTION_POOL_KWARGS']['ssl_cert_reqs'] = None
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
@@ -934,9 +989,6 @@ if get_env_bool('WEBLATE_REQUIRE_LOGIN', False):
         ),
     )
 
-# Force sane test runner
-TEST_RUNNER = 'django.test.runner.DiscoverRunner'
-
 # Email server
 EMAIL_USE_TLS = get_env_bool('WEBLATE_EMAIL_USE_TLS', True)
 EMAIL_USE_SSL = get_env_bool('WEBLATE_EMAIL_USE_SSL', False)
@@ -963,20 +1015,16 @@ SILENCED_SYSTEM_CHECKS = [
 ]
 SILENCED_SYSTEM_CHECKS.extend(get_env_list('WEBLATE_SILENCED_SYSTEM_CHECKS'))
 
-# Celery worker configuration for testing
-if 'MEMCACHED_HOST' in os.environ:
-    CELERY_TASK_ALWAYS_EAGER = True
-    CELERY_BROKER_URL = 'memory://'
 # Celery worker configuration for production
-else:
-    CELERY_TASK_ALWAYS_EAGER = False
-    CELERY_BROKER_URL = 'redis://{0}{1}:{2}/{3}'.format(
-        ':{}'.format(REDIS_PASSWORD) if REDIS_PASSWORD else '',
-        os.environ.get('REDIS_HOST', 'cache'),
-        os.environ.get('REDIS_PORT', '6379'),
-        os.environ.get('REDIS_DB', '1'),
-    )
-    CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_TASK_ALWAYS_EAGER = False
+CELERY_BROKER_URL = '{}://{}{}:{}/{}'.format(
+    REDIS_PROTO,
+    ':{}@'.format(REDIS_PASSWORD) if REDIS_PASSWORD else '',
+    os.environ.get('REDIS_HOST', 'cache'),
+    os.environ.get('REDIS_PORT', '6379'),
+    os.environ.get('REDIS_DB', '1'),
+)
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 
 # Celery settings, it is not recommended to change these
 CELERY_WORKER_PREFETCH_MULTIPLIER = 0
@@ -989,10 +1037,15 @@ CELERY_TASK_ROUTES = {
     'weblate.trans.tasks.optimize_fulltext': {'queue': 'search'},
     'weblate.trans.tasks.cleanup_fulltext': {'queue': 'search'},
     'weblate.memory.tasks.*': {'queue': 'memory'},
+    'weblate.accounts.tasks.notify_change': {'queue': 'notify'},
+    'weblate.accounts.tasks.send_mails': {'queue': 'notify'},
 }
 
 # Enable auto updating
 AUTO_UPDATE = get_env_bool('WEBLATE_AUTO_UPDATE', False)
+
+# PGP commits signing
+WEBLATE_GPG_IDENTITY = os.environ.get('WEBLATE_GPG_IDENTITY', None)
 
 ADDITIONAL_CONFIG = '/app/data/settings-override.py'
 if os.path.exists(ADDITIONAL_CONFIG):

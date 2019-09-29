@@ -1,12 +1,19 @@
-# Weblate image for Docker
+# Official Docker container for Weblate
 
-[![Build Status](https://travis-ci.org/WeblateOrg/docker.svg?branch=master)](https://travis-ci.org/WeblateOrg/docker)
+[![Build Status](https://travis-ci.com/WeblateOrg/docker.svg?branch=master)](https://travis-ci.com/WeblateOrg/docker)
 [![Docker Layers](https://images.microbadger.com/badges/image/weblate/weblate.svg)](https://microbadger.com/images/weblate/weblate "Get your own image badge on microbadger.com")
-[![Requirements Status](https://requires.io/github/WeblateOrg/docker/requirements.svg?branch=master)](https://requires.io/github/WeblateOrg/docker/requirements/?branch=master)
+[![Documenation](https://img.shields.io/readthedocs/weblate.svg)](https://docs.weblate.org/en/latest/admin/install/docker.html)
 
-Docker container for Weblate
+Weblate is a libre software web-based continuous localization system used by
+over 1150+ opensource projects & companies in over 115+ countries around the
+World.
 
 You might want to use [Weblate docker-compose](https://github.com/WeblateOrg/docker-compose) to run Weblate.
+
+## Exposed ports
+
+In July 2019 (starting with the 3.7.1-6 tag), the containers is not running as
+root. As a consequence this has lead to changed exposed port from 80 to 8080.
 
 ## sr258's fork
 
@@ -28,4 +35,4 @@ You can use following tags on Docker hub:
 
 Detailed documentation is available in Weblate documentation:
 
-https://docs.weblate.org/en/latest/admin/deployments.html#docker
+https://docs.weblate.org/en/latest/admin/install/docker.html

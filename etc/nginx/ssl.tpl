@@ -1,5 +1,8 @@
 server {
-    listen 8080 default_server;
+    listen 4443 ssl;
+    ssl_certificate /app/data/ssl/fullchain.pem;
+    ssl_certificate_key /app/data/ssl/privkey.pem;
+
     root /app/data/static;
     client_max_body_size 100M;
 
@@ -34,4 +37,9 @@ server {
         # Adjust based to uwsgi configuration:
         uwsgi_pass unix:///run/uwsgi/app/weblate/socket;
     }
+}
+
+server {
+    listen 8080 default_server;
+    return 301 https://$server_name$request_uri;
 }
