@@ -1,4 +1,4 @@
-From 92aac2f93a76fa3a30828a428f3d68ca6b080a6a Mon Sep 17 00:00:00 2001
+From 0e9d91fc7c8ba31e1003d1574acf42b1fc1dfe49 Mon Sep 17 00:00:00 2001
 From: Sebastian Rettig <serettig@posteo.de>
 Date: Wed, 13 Feb 2019 18:33:03 +0100
 Subject: [PATCH 1/7] set /home/weblate/.config/hub as patch for GitHub config
@@ -9,10 +9,10 @@ Subject: [PATCH 1/7] set /home/weblate/.config/hub as patch for GitHub config
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/weblate/vcs/git.py b/weblate/vcs/git.py
-index 796f55666c..f1504884a3 100644
+index 9396de363d..593e35b005 100644
 --- a/weblate/vcs/git.py
 +++ b/weblate/vcs/git.py
-@@ -526,7 +526,7 @@ class GithubRepository(GitRepository):
+@@ -550,7 +550,7 @@ class GithubRepository(GitRepository):
          """Generate environment for process execution."""
          env = super(cls, GithubRepository)._getenv()
          # Add path to config if it exists
@@ -22,10 +22,10 @@ index 796f55666c..f1504884a3 100644
              env['HUB_CONFIG'] = userconfig
  
 -- 
-2.20.1
+2.17.1
 
 
-From ef32c9a618cea4a1d37a35211177dfd5aa7c9679 Mon Sep 17 00:00:00 2001
+From e8f1e45b5626699b7b88cb56a9c6b7bc4329c52e Mon Sep 17 00:00:00 2001
 From: Sebastian Rettig <serettig@posteo.de>
 Date: Fri, 22 Feb 2019 15:27:35 +0100
 Subject: [PATCH 2/7] Strip leading and trailing . from language code (backport
@@ -36,7 +36,7 @@ Subject: [PATCH 2/7] Strip leading and trailing . from language code (backport
  1 file changed, 3 insertions(+)
 
 diff --git a/weblate/lang/models.py b/weblate/lang/models.py
-index d81b1573c8..19a29ff679 100644
+index 18a1e27c5d..0d8d66c4a9 100644
 --- a/weblate/lang/models.py
 +++ b/weblate/lang/models.py
 @@ -140,6 +140,9 @@ class LanguageQuerySet(models.QuerySet):
@@ -50,10 +50,10 @@ index d81b1573c8..19a29ff679 100644
          # Strip leading and trailing .
          code = code.strip('.')
 -- 
-2.20.1
+2.17.1
 
 
-From 2ae84475a001bb1fff76317c980f16c98ac7c539 Mon Sep 17 00:00:00 2001
+From 40f64c0d3d2ad9b989c6b16e04b5b0444a3a2889 Mon Sep 17 00:00:00 2001
 From: Sebastian Rettig <serettig@posteo.de>
 Date: Fri, 22 Feb 2019 15:29:21 +0100
 Subject: [PATCH 3/7] formatting
@@ -63,7 +63,7 @@ Subject: [PATCH 3/7] formatting
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/weblate/lang/models.py b/weblate/lang/models.py
-index 19a29ff679..c156bd966f 100644
+index 0d8d66c4a9..e2e5bfdd9b 100644
 --- a/weblate/lang/models.py
 +++ b/weblate/lang/models.py
 @@ -140,7 +140,7 @@ class LanguageQuerySet(models.QuerySet):
@@ -76,10 +76,10 @@ index 19a29ff679..c156bd966f 100644
          code = code.strip('.')
  
 -- 
-2.20.1
+2.17.1
 
 
-From f9dfbea8c83eabbaf7b3e42cd6b82b46bafbb7fe Mon Sep 17 00:00:00 2001
+From 267300bacbdda82dc9c72138c62bdfe0d82aa1da Mon Sep 17 00:00:00 2001
 From: Sebastian Rettig <serettig@posteo.de>
 Date: Sat, 23 Feb 2019 17:20:05 +0100
 Subject: [PATCH 4/7] aligned German legal requirements
@@ -107,10 +107,10 @@ index 483e1bbf0d..eabd954fcc 100644
    <li><a href="{% url 'contact' %}">{% trans "Contact" %}</a></li>
    <li><a href="{% documentation 'index' %}">{% trans "Documentation" %}</a></li>
 -- 
-2.20.1
+2.17.1
 
 
-From 402f36d2c419c099aa02995c43a8ae95dcfc3099 Mon Sep 17 00:00:00 2001
+From bf50c0568e867bc194bc4230a0e24c88ff12d527 Mon Sep 17 00:00:00 2001
 From: Sebastian Rettig <serettig@posteo.de>
 Date: Sat, 23 Feb 2019 17:28:27 +0100
 Subject: [PATCH 5/7] fixed footer
@@ -133,10 +133,10 @@ index eabd954fcc..aa01c56b89 100644
    <li><a href="{$ url 'legal:privacy' %}">Datenschutz</a></li>
    {% endif %}
 -- 
-2.20.1
+2.17.1
 
 
-From c52fd87b13035eb5c5413f39e6356d54fea9b98b Mon Sep 17 00:00:00 2001
+From 6420606a4d567630df72afa9f05d83bdc0e581ab Mon Sep 17 00:00:00 2001
 From: Sebastian Rettig <serettig@posteo.de>
 Date: Sun, 24 Feb 2019 10:32:48 +0100
 Subject: [PATCH 6/7] fixed url
@@ -165,10 +165,10 @@ index aa01c56b89..b0e48bdfe9 100644
    {% if status_url %}<li><a href="{{ status_url }}">{% trans "Service status" %}</a></li>{% endif %}
    <li><a href="{% url 'contact' %}">{% trans "Contact" %}</a></li>
 -- 
-2.20.1
+2.17.1
 
 
-From c09ef1b1b25dce601167ad7181b24a94f18bbe7e Mon Sep 17 00:00:00 2001
+From a9ba9633ce68c499d704acf636b336d47a3b43b4 Mon Sep 17 00:00:00 2001
 From: Sebastian Rettig <serettig@posteo.de>
 Date: Fri, 3 May 2019 15:35:13 +0200
 Subject: [PATCH 7/7] removed backport
@@ -178,7 +178,7 @@ Subject: [PATCH 7/7] removed backport
  1 file changed, 3 deletions(-)
 
 diff --git a/weblate/lang/models.py b/weblate/lang/models.py
-index c156bd966f..d81b1573c8 100644
+index e2e5bfdd9b..18a1e27c5d 100644
 --- a/weblate/lang/models.py
 +++ b/weblate/lang/models.py
 @@ -144,9 +144,6 @@ class LanguageQuerySet(models.QuerySet):
@@ -192,5 +192,5 @@ index c156bd966f..d81b1573c8 100644
  
      def aliases_get(self, code):
 -- 
-2.20.1
+2.17.1
 
